@@ -1,0 +1,12 @@
+version: '3'
+services:
+  phoneme_segmentation_api:
+    # restart: always
+    build: ./docker/api
+    container_name: 'phoneme_segmentation_api'
+    tty: true
+    ports:
+      - 8000:8000
+    volumes:
+      - ./app:/usr/src/app
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
