@@ -1,7 +1,11 @@
 from fastapi import FastAPI
+from controllers import phoneme_segmentation
 
-app = FastAPI()
+app = FastAPI(
+  title='音素セグメンテーションAPI',
+  description='Juliusを用いた音素ラベリングセグメンテーションの実行',
+  version='0.1 beta'
+)
 
-@app.get("/")
-def read_root(): dict:
-  return {"Hello": "World2"}
+# ルーティングをinclude
+app.include_router(phoneme_segmentation.router)
