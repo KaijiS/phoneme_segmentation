@@ -16,9 +16,19 @@ class PhonemeSegmentationService:
     --------------
     List[Phoneme]
     '''
+
+    # TODO 音声ファイルの中身確認
+
+    # TODO 音声ファイルとテキストファイル保存
+
+    # TODO perl実行(kitをgit cloneしてくる)
+
+    # TODO 終了 or どこかで失敗した場合保存したファイルすべて削除(finally句を使用)
+
+    # TODO 型にはめてレスポンス
+
     phonemes: List[Phoneme] =  []
     for i in range(2):
-      print('-----------')
       phoneme: Phoneme = Phoneme(
         phoneme = 'a',
         wavedata = 'wavedata_base64',
