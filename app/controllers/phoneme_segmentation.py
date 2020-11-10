@@ -9,11 +9,11 @@ from services.phoneme_segmentation_service import PhonemeSegmentationService
 router = APIRouter()
 
 @router.get('/')
-def connection_check() -> str:
+def connection_check() -> dict[str: str]:
   '''
   意思疎通確認用API
   '''
-  return '接続確認！'
+  return {'接続':'確認！'}
 
 
 @router.post('/', response_model=List[Phoneme])

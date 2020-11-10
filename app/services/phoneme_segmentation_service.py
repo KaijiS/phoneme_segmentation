@@ -16,9 +16,9 @@ class PhonemeSegmentationService:
     --------------
     List[Phoneme]
     '''
-
     phonemes: List[Phoneme] =  []
     for i in range(2):
+      print('-----------')
       phoneme: Phoneme = Phoneme(
         phoneme = 'a',
         wavedata = 'wavedata_base64',

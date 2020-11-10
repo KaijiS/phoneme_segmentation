@@ -6,7 +6,10 @@ services:
     container_name: 'phoneme_segmentation_api'
     tty: true
     ports:
+      # api用
       - 8000:8000
+      # サンプルコードのnotebook用
+      - 4000:4000
     volumes:
       - ./app:/usr/src/app
     # command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
