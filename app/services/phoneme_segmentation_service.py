@@ -3,8 +3,10 @@ from schemas.Phoneme import Phoneme
 from typing import List
 
 import os
+import sys
 import datetime
 import base64
+import subprocess
 
 from components.WaveData import WaveData
 from utils import file_read_write
@@ -37,7 +39,12 @@ def phoneme_segmentation(originalVoiceWaveform: OriginalVoiceWaveform) -> List[P
     originalVoiceWaveform.textdata
   )
 
-  # TODO perl実行(kitをgit cloneしてくる)
+  # perl実行
+  run_segmentation_julius(dir_path, '0')
+
+  # TODO 分解された音素音声ファイルを保存するためのディレクトリを準備
+
+  # TODO 音声波形を音素に分解してファイル出力
 
   # TODO 終了 or どこかで失敗した場合保存したファイルすべて削除(finally句を使用)
 
@@ -77,8 +84,8 @@ def write_wavefile_and_textfile(
   base_filename : str,
   wave_binary: bytes,
   textdata: str
-):
-  '''
+) -> str:
+  ''' 音声ファイルとテキストファイルの書き出し
   Parameters
   --------------
   base_filename:  音声ファイル名(拡張子なし)
@@ -111,3 +118,37 @@ def write_wavefile_and_textfile(
   )
 
   return dir_path
+
+
+def run_segmentation_julius(dir_path: str, disable_silence_at_ends: str = '0'):
+  ''' segmentation-kit(perl)の実行
+
+  Parameters
+  --------------
+  dir_path: 解析対象音声ファイルとテキストファイルが格納されているディレクトリ
+  disable_silence_at_ends:
+        実行時には文頭・文末に自動的に無音(silB, silE)を挿入してアラインメント が行われます。
+        この機能を止めたい場合は'1'をセットしてから以下を実行してください。
+        (デフォルト: '0')
+  '''
+  try:
+    subprocess.run(
+      [
+        "perl",
+        "segment_julius.pl",
+        "../../" + dir_path,
+        disable_silence_at_ends
+      ],
+      cwd='components/segmentation-kit',
+      check=True
+    )
+
+  except subprocess.CalledProcessError:
+    # print('セグメンテーションのの実行に失敗しました', file=sys.stderr)
+    HTTPException(status_code=500, detail=sys.stderr)
+
+  finally:
+    # TODO ファイル削除
+    print('finally')
+
+  return
