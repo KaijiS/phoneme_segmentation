@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from typing import List
 
-from schemas.OriginalVoiceWaveform import OriginalVoiceWaveform
+from schemas.Speech import Speech
 from schemas.Phoneme import Phoneme
 
 from services import phoneme_segmentation_service
@@ -17,9 +17,9 @@ async def connection_check() -> dict[str: str]:
 
 
 @router.post('/', response_model=List[Phoneme], status_code=201)
-async def phoneme_segmentation(originalVoiceWaveform: OriginalVoiceWaveform) -> List[Phoneme]:
+async def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
   '''
   音素セグメンテーションの実行API
   '''
 
-  return phoneme_segmentation_service.phoneme_segmentation(originalVoiceWaveform)
+  return phoneme_segmentation_service.phoneme_segmentation(speech)

@@ -1,4 +1,4 @@
-from schemas.OriginalVoiceWaveform import OriginalVoiceWaveform
+from schemas.Speech import Speech
 from schemas.Phoneme import Phoneme
 from typing import List
 
@@ -11,36 +11,36 @@ import subprocess
 from components.WaveData import WaveData
 from utils import file_read_write
 
-def phoneme_segmentation(originalVoiceWaveform: OriginalVoiceWaveform) -> List[Phoneme]:
+def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
   ''' 音素セグメンテーションを実行
 
   Parameters
   --------------
-  originalVoiceWaveform: OriginalVoiceWaveform
+  speech: Speech
 
   Returns
   --------------
   List[Phoneme]
   '''
   # 音声ファイルをバイナリに変換
-  wave_binary: bytes = base64.b64decode(originalVoiceWaveform.wavedata_base64.encode("UTF-8"))
+  wave_binary: bytes = base64.b64decode(speech.wavedata_base64.encode("UTF-8"))
 
   # 音声ファイルの検証
   # TODO 検証
   # validate_wavefile(wave_binary)
 
   # ファイル名から拡張子を除いたものをベースとする
-  base_filename = originalVoiceWaveform.filename.lower().replace('.wav', '')
+  base_filename = speech.filename.lower().replace('.wav', '')
 
   # 音声ファイルとテキストファイル保存し保存先のディレクトリpathを取得
   dir_path = write_wavefile_and_textfile(
     base_filename,
     wave_binary,
-    originalVoiceWaveform.textdata
+    speech.textdata
   )
 
   # perl実行
-  run_segmentation_julius(dir_path, '0')
+  run_segmentation_julius(dir_path, speech.disable_silence_at_ends)
 
   # TODO 分解された音素音声ファイルを保存するためのディレクトリを準備
 
