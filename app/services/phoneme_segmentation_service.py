@@ -2,9 +2,12 @@ from schemas.OriginalVoiceWaveform import OriginalVoiceWaveform
 from schemas.Phoneme import Phoneme
 from typing import List
 
+import os
+import datetime
 import base64
 
 from components.WaveData import WaveData
+from utils import file_read_write
 
 def phoneme_segmentation(originalVoiceWaveform: OriginalVoiceWaveform) -> List[Phoneme]:
   ''' 音素セグメンテーションを実行
@@ -17,11 +20,22 @@ def phoneme_segmentation(originalVoiceWaveform: OriginalVoiceWaveform) -> List[P
   --------------
   List[Phoneme]
   '''
+  # 音声ファイルをバイナリに変換
+  wave_binary: bytes = base64.b64decode(originalVoiceWaveform.wavedata_base64.encode("UTF-8"))
 
-  # TODO 音声ファイルの中身確認
-  check_wavefile(originalVoiceWaveform.wavedata_base64)
+  # 音声ファイルの検証
+  # TODO 検証
+  # validate_wavefile(wave_binary)
 
-  # TODO 音声ファイルとテキストファイル保存
+  # ファイル名から拡張子を除いたものをベースとする
+  base_filename = originalVoiceWaveform.filename.lower().replace('.wav', '')
+
+  # 音声ファイルとテキストファイル保存し保存先のディレクトリpathを取得
+  dir_path = write_wavefile_and_textfile(
+    base_filename,
+    wave_binary,
+    originalVoiceWaveform.textdata
+  )
 
   # TODO perl実行(kitをgit cloneしてくる)
 
@@ -45,12 +59,55 @@ def phoneme_segmentation(originalVoiceWaveform: OriginalVoiceWaveform) -> List[P
 
 
 
-def check_wavefile(wavedata_base64: str):
+def validate_wavefile(wave_binary: bytes):
+  ''' 音声ファイルの検証
 
-  # まずバイナリに変更
-  binary: bytes = base64.b64decode(wavedata_base64.encode("UTF-8"))
-  wavedata: WaveData = WaveData(binary)
-  print(wavedata.riff)
-  print(wavedata.format)
+  Parameters
+  --------------
+  wave_binary: 音声バイナリファイル
+  '''
+
+  wavedata: WaveData = WaveData(wave_binary)
   wavedata.validate()
+
   return
+
+
+def write_wavefile_and_textfile(
+  base_filename : str,
+  wave_binary: bytes,
+  textdata: str
+):
+  '''
+  Parameters
+  --------------
+  base_filename:  音声ファイル名(拡張子なし)
+  wave_binary:    音声バイナリファイル
+  textdata:       textデータ内容
+
+  Returns
+  --------------
+  保存先ディレクトリ
+  '''
+
+  # 現在のタイムスタンプを取得してそれを利用した名のディレクトリを作成
+  now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+  dir_path = f'.tmp/{now.strftime("%Y%m%d%H%M%S")}_{base_filename}'
+  os.makedirs(dir_path)
+
+  text_filepath = f'{dir_path}/{base_filename}.txt'
+  wave_filepath = f'{dir_path}/{base_filename}.wav'
+
+  # テキストファイル書き出し
+  file_read_write.write_text(
+    text_filepath,
+    textdata
+  )
+
+  # 音声バイナリファイル書き出し
+  file_read_write.write_binary(
+    wave_filepath,
+    wave_binary
+  )
+
+  return dir_path

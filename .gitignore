@@ -1,1 +1,8 @@
 __pycache__
+
+app/sample/.ipynb_checkpoints
+
+~
+
+app/.tmp/*
+!app/.tmp/.gitkeep
