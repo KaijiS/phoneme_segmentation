@@ -1,5 +1,6 @@
 import struct
 from fastapi import HTTPException
+import logging
 
 class WaveData:
   '''
@@ -41,30 +42,45 @@ class WaveData:
     #   error_massages.append('ファイル形式が違います')
     if not (self.riff == '0x52494646' and self.fmt == '0x666D7420' and self.subchunk_identifier == '0x64617461'):
       error_massages.append('ファイル形式が違います')
+      logging.error('ファイル形式が違います')
+      logging.error(f'riff: {self.riff} ... except "RIFF"' )
+      logging.error(f'fmt: {self.fmt} ... except "fmt "')
+      logging.error(f'subchunk_identifier: {self.subchunk_identifier} ... except "data"')
 
     # if self.format != 'WAVE':
     #   error_massages.append('wavファイルにしてください')
     if self.format != '0x57415645':
       error_massages.append('wavファイルにしてください')
+      logging.error('wavファイルにしてください')
+      logging.error(f'format: {self.format} ... except "WAVE"')
 
     if self.audioFormat != 1:
       error_massages.append('非圧縮のリニアPCMフォーマットにしてください')
+      logging.error('非圧縮のリニアPCMフォーマットにしてください')
+      logging.error(f'audioFormat: {self.audioFormat} ... except 1')
 
     # チャンネル数を取得
     # モノラルチャンネルだけが対象
     if self.ch != 1:
       error_massages.append('モノラルにしてください')
+      logging.error('モノラルにしてください')
+      logging.error(f'ch: {self.ch} ... except 1')
 
     # サンプリング周波数を取得
     # 16000[Hz]だけが対象
     if self.fs != 16000:
       error_massages.append('サンプリング周波数は16000[Hz]にしてください')
+      logging.error('サンプリング周波数は16000[Hz]にしてください')
+      logging.error(f'fs: {self.fs} ... except 16000')
 
     # 量子化bit数を取得
     # 16bitだけが対象
     if self.quantization_bit != 16:
       error_massages.append('量子化ビット数は16[bit]にしてください')
+      logging.error('量子化ビット数は16[bit]にしてください')
+      logging.error(f'quantization_bit: {self.quantization_bit} ... except 16')
 
     # 一つでもバリデーションエラーでエラーハンドリング
     if len(error_massages) > 0:
+      logging.error('wavファイルバリデーションエラー')
       raise HTTPException(status_code=415, detail=error_massages)
