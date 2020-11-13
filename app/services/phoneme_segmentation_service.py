@@ -1,5 +1,7 @@
 from schemas.Speech import Speech
 from schemas.Phoneme import Phoneme
+from schemas.Phonemes import Phonemes
+from fastapi import HTTPException
 from typing import List
 
 import os
@@ -9,7 +11,8 @@ import base64
 import subprocess
 
 from components.WaveData import WaveData
-from utils import file_read_write
+from utils import fileutil
+from models.dto.PhonemeDto import PhonemeDto
 
 def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
   ''' 音素セグメンテーションを実行
@@ -22,47 +25,69 @@ def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
   --------------
   List[Phoneme]
   '''
-  # 音声ファイルをバイナリに変換
-  wave_binary: bytes = base64.b64decode(speech.wavedata_base64.encode("UTF-8"))
 
-  # 音声ファイルの検証
-  # TODO 検証
-  # validate_wavefile(wave_binary)
+  try:
 
-  # ファイル名から拡張子を除いたものをベースとする
-  base_filename = speech.filename.lower().replace('.wav', '')
+    # 音声ファイルをバイナリに変換
+    wave_binary: bytes = base64.b64decode(speech.wavedata_base64.encode("UTF-8"))
 
-  # 音声ファイルとテキストファイル保存し保存先のディレクトリpathを取得
-  dir_path = write_wavefile_and_textfile(
-    base_filename,
-    wave_binary,
-    speech.textdata
-  )
+    # 音声ファイルの検証
+    # TODO 検証
+    # validate_wavefile(wave_binary)
 
-  # perl実行
-  run_segmentation_julius(dir_path, speech.disable_silence_at_ends)
+    # ファイル名から拡張子を除いたものをベースとする
+    base_filename = speech.filename.lower().replace('.wav', '')
 
-  # TODO 分解された音素音声ファイルを保存するためのディレクトリを準備
-
-  # TODO 音声波形を音素に分解してファイル出力
-
-  # TODO 終了 or どこかで失敗した場合保存したファイルすべて削除(finally句を使用)
-
-  # TODO 型にはめてレスポンス
-
-  phonemes: List[Phoneme] =  []
-  for i in range(2):
-    phoneme: Phoneme = Phoneme(
-      phoneme = 'a',
-      wavedata = 'wavedata_base64',
-      filename = 'filename_a_00001111000.wav',
-      array_index_from = 20,
-      array_index_to = 39,
-      n_score=0.987
+    # 音声ファイルとテキストファイル保存し保存先のディレクトリpathを取得
+    dir_path = write_wavefile_and_textfile(
+      base_filename,
+      wave_binary,
+      speech.textdata
     )
-    phonemes.append(phoneme)
 
-  return phonemes
+    # 音素セグメンテーション perl実行
+    run_segmentation_julius(dir_path, speech.disable_silence_at_ends)
+
+    # 音声波形を音素に分解してファイル出力しその音素ファイル情報を受取る
+    phoneme_dto_list: List[PhonemeDto] = divide_into_phoneme_and_write_wave_file(dir_path, base_filename)
+
+    # レスポンス準備
+    phoneme_list: List[Phoneme] =  []
+    for phoneme_dto in phoneme_dto_list:
+      print(phoneme_dto)
+      # 先に音素ファイルを読み込みbase64形式に変換
+      wavedate_base64 = base64.b64encode(fileutil.read_binary(phoneme_dto.filepath)).decode("UTF-8")
+      # レスポンス用スキーマに詰め込み
+      phoneme: Phoneme = Phoneme(
+        phoneme = phoneme_dto.phoneme,
+        wavedata = wavedate_base64,
+        filename = phoneme_dto.filename,
+        start_time = phoneme_dto.start_time,
+        end_time = phoneme_dto.end_time
+      )
+      phoneme_list.append(phoneme)
+
+    # juliusの出力labデータを準備
+    lab_text: str = fileutil.read_text(f'{dir_path}/{base_filename}.lab')
+    # juliusの出力logデータを準備
+    log_text: str = fileutil.read_text(f'{dir_path}/{base_filename}.log')
+
+    phonemes = Phonemes(
+      phonemes    = phoneme_list,
+      julius_lab  = lab_text,
+      julius_log  = log_text
+    )
+
+    return phonemes
+
+  except:
+    # エラーハンドリング
+    HTTPException(status_code=500, detail='サーバエラー')
+
+  # finally:
+  #   # 正常でもエラーがあってもファイル削除
+  #   if 'dir_path' in locals():
+  #     fileutil.removeDir(dir_path)
 
 
 
@@ -106,13 +131,13 @@ def write_wavefile_and_textfile(
   wave_filepath = f'{dir_path}/{base_filename}.wav'
 
   # テキストファイル書き出し
-  file_read_write.write_text(
+  fileutil.write_text(
     text_filepath,
     textdata
   )
 
   # 音声バイナリファイル書き出し
-  file_read_write.write_binary(
+  fileutil.write_binary(
     wave_filepath,
     wave_binary
   )
@@ -144,11 +169,67 @@ def run_segmentation_julius(dir_path: str, disable_silence_at_ends: str = '0'):
     )
 
   except subprocess.CalledProcessError:
-    # print('セグメンテーションのの実行に失敗しました', file=sys.stderr)
     HTTPException(status_code=500, detail=sys.stderr)
 
-  finally:
-    # TODO ファイル削除
-    print('finally')
-
   return
+
+
+def divide_into_phoneme_and_write_wave_file(dir_path: str, base_filename: str):
+  ''' segmentation-kitの結果ファイルをもとに 原音声ファイルを分割して保存
+
+  Parameters
+  --------------
+  dir_path      : 解析対象音声ファイルとテキストファイル、
+                  及びsegmentation-kitの結果ファイル(log, lab)が格納されているディレクトリ
+  base_filename : 解析対象音声ファイルとテキストファイル、
+                  及びsegmentation-kitの結果ファイル(log, lab)の拡張子を除くファイル名
+
+  Returns
+  --------------
+  List[PhonemeDto] 音素ファイル情報
+  '''
+
+  # 音声データを取得
+  wave_filepath: str = f'{dir_path}/{base_filename}.wav'
+  wave_array, fs, times_array = fileutil.read_wave_file(wave_filepath)
+
+  # labファイル読み込み
+  lab_filepath: str = f'{dir_path}/{base_filename}.lab'
+  lab_text: str = fileutil.read_text(lab_filepath)
+
+  # 音素データを保存するディレクトリ作成
+  phoneme_output_dir: str = f'{dir_path}/phoneme'
+  os.makedirs(phoneme_output_dir)
+
+  # 戻り値用リスト
+  phoneme_dto_list: List[PhonemeDto] = []
+
+  # 改行で区切り、それぞれリストの要素とする
+  lab_text_to_list = lab_text.split('\n')
+  # 上記リストの要素を一つずつ(labファイルの内容を1行ずつ)読みながら処理
+  for lab_text_oneline in lab_text_to_list:
+
+    # スペース区切りで音素開始時間, 音素終了時間, 音素情報を抽出
+    phoneme_start_time, phoneme_end_time, phoneme = lab_text_oneline.split(' ')
+    # 対象の波形を切り出し
+    phoneme_wav_array = wave_array[int(float(phoneme_start_time)*fs):int(float(phoneme_end_time)*fs)+1]
+    # wavファイルに変換し保存
+    phoneme_filename = f'{base_filename}_{phoneme}_{str(int(float(phoneme_start_time)*(10**6)))}us.wav'
+    phoneme_filepath = f'{phoneme_output_dir}/{phoneme_filename}'
+    fileutil.write_wave_file(
+      phoneme_filepath,
+      phoneme_wav_array,
+      fs=fs
+    )
+
+    phonemeDto: PhonemeDto = PhonemeDto(
+      phoneme     = phoneme,
+      filepath    = phoneme_filepath,
+      filename    = phoneme_filename,
+      start_time  = phoneme_start_time,
+      end_time    = phoneme_end_time
+    )
+
+    phoneme_dto_list.append(phonemeDto)
+
+  return phoneme_dto_list
