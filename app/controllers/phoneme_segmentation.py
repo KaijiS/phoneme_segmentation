@@ -1,8 +1,7 @@
 from fastapi import APIRouter
-from typing import List
 
 from schemas.Speech import Speech
-from schemas.Phoneme import Phoneme
+from schemas.Phonemes import Phonemes
 
 from services import phoneme_segmentation_service
 
@@ -16,8 +15,8 @@ async def connection_check() -> dict[str: str]:
   return {'接続':'確認！'}
 
 
-@router.post('/', response_model=List[Phoneme], status_code=201)
-async def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
+@router.post('/', response_model=Phonemes, status_code=201)
+async def phoneme_segmentation(speech: Speech) -> Phonemes:
   '''
   音素セグメンテーションの実行API
   '''
