@@ -9,6 +9,7 @@ import sys
 import datetime
 import base64
 import subprocess
+import logging
 
 from components.WaveData import WaveData
 from utils import fileutil
@@ -28,12 +29,16 @@ def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
 
   try:
 
+    logging.info('--------Phoneme Segmentation Service Start-----------')
+    logging.info(f'File Name: {speech.filename}')
+
     # 音声ファイルをバイナリに変換
     wave_binary: bytes = base64.b64decode(speech.wavedata_base64.encode("UTF-8"))
 
     # 音声ファイルの検証
     # TODO 検証
     # validate_wavefile(wave_binary)
+    logging.info(f'Wave File Validation: OK')
 
     # ファイル名から拡張子を除いたものをベースとする
     base_filename = speech.filename.lower().replace('.wav', '')
@@ -44,17 +49,20 @@ def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
       wave_binary,
       speech.textdata
     )
+    logging.info(f'writing Original File: OK')
 
     # 音素セグメンテーション perl実行
     run_segmentation_julius(dir_path, speech.disable_silence_at_ends)
+    logging.info(f'Segmentation-kit: Complete')
 
     # 音声波形を音素に分解してファイル出力しその音素ファイル情報を受取る
     phoneme_dto_list: List[PhonemeDto] = divide_into_phoneme_and_write_wave_file(dir_path, base_filename)
+    logging.info(f'Segmentation and Writing Phoneme Wave File : Complete')
 
     # レスポンス準備
     phoneme_list: List[Phoneme] =  []
     for phoneme_dto in phoneme_dto_list:
-      print(phoneme_dto)
+
       # 先に音素ファイルを読み込みbase64形式に変換
       wavedate_base64 = base64.b64encode(fileutil.read_binary(phoneme_dto.filepath)).decode("UTF-8")
       # レスポンス用スキーマに詰め込み
@@ -78,16 +86,20 @@ def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
       julius_log  = log_text
     )
 
+    logging.info(f'Response Preperation : OK')
+
+    logging.info('--------Phoneme Segmentation Service Finished-----------')
+
     return phonemes
 
   except:
     # エラーハンドリング
-    HTTPException(status_code=500, detail='サーバエラー')
+    raise HTTPException(status_code=500, detail='サーバエラー')
 
-  # finally:
-  #   # 正常でもエラーがあってもファイル削除
-  #   if 'dir_path' in locals():
-  #     fileutil.removeDir(dir_path)
+  finally:
+    # 正常でもエラーがあってもファイル削除
+    if 'dir_path' in locals():
+      fileutil.removeDir(dir_path)
 
 
 
