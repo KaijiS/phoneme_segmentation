@@ -9,10 +9,10 @@ Stat: init_phmm: base phones:    43 used in logical
 Stat: init_phmm: finished reading HMM definitions
 STAT: *** AM00 _default loaded
 STAT: *** loading LM00 _default
-STAT: reading [../../.tmp/20201113205933_sample_01/sample_01.dfa] and [../../.tmp/20201113205933_sample_01/sample_01.dict]...
+STAT: reading [../../.tmp/20201113210114_sample_01/sample_01.dfa] and [../../.tmp/20201113210114_sample_01/sample_01.dict]...
 Stat: init_voca: read 3 words
-Error: gzfile: unable to open ../../.tmp/20201113205933_sample_01/sample_01.dfa.forward
-Error: init_dfa: failed to open ../../.tmp/20201113205933_sample_01/sample_01.dfa.forward
+Error: gzfile: unable to open ../../.tmp/20201113210114_sample_01/sample_01.dfa.forward
+Error: init_dfa: failed to open ../../.tmp/20201113210114_sample_01/sample_01.dfa.forward
 STAT: done
 STAT: Gram #0 sample_01 registered
 STAT: Gram #0 sample_01: new grammar loaded, now mash it up for recognition
@@ -85,8 +85,8 @@ Configuration of Modules
  Language Model:
  - LM00 "_default"
 	grammar #1:
-	    dfa  = ../../.tmp/20201113205933_sample_01/sample_01.dfa
-	    dict = ../../.tmp/20201113205933_sample_01/sample_01.dict
+	    dfa  = ../../.tmp/20201113210114_sample_01/sample_01.dfa
+	    dict = ../../.tmp/20201113210114_sample_01/sample_01.dict
 
  Recognizer:
  - SR00 "_default" (AM00, LM00)
@@ -232,7 +232,7 @@ Notice for feature extraction (01),
 
 ------
 ### read waveform input
-Stat: adin_file: input speechfile: ../../.tmp/20201113205933_sample_01/sample_01.wav
+Stat: adin_file: input speechfile: ../../.tmp/20201113210114_sample_01/sample_01.wav
 STAT: 33000 samples (2.06 sec.)
 STAT: ### speech analysis (waveform -> MFCC)
 ### Recognition: 1st pass (LR beam)
