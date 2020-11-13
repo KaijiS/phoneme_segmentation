@@ -7,6 +7,9 @@ ENV HOME ~
 RUN apt-get update
 RUN apt-get upgrade -y
 
+# エディタとビューワーをインストール
+RUN apt install -y vim less
+
 WORKDIR /usr/src/app
 # Python各ライブラリインストール
 COPY requirements.txt ./
