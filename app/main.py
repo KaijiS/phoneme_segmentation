@@ -18,7 +18,7 @@ logging.basicConfig(
 app = FastAPI(
   title='音素セグメンテーションAPI',
   description='Juliusを用いた音素ラベリングセグメンテーションの実行',
-  version='0.1',
+  version='1.0',
   # デフォルトの応答クラスを指定: ORJSONResponseｰ>パフォーマンス高い
   default_response_class=ORJSONResponse
 )
