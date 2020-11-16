@@ -37,7 +37,7 @@ def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
 
     # 音声ファイルの検証
     # TODO 検証
-    # validate_wavefile(wave_binary)
+    validate_wavefile(wave_binary)
     logging.info(f'Wave File Validation: OK')
 
     # ファイル名から拡張子を除いたものをベースとする
