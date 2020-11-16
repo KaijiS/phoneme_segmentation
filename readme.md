@@ -20,7 +20,7 @@
 ### 1. リポジトリのクローン
 
 ```
-git clone --recursive {クローンしたいリポジトリ}
+git clone --recursive https://github.com/KaijiS/phoneme_segmentation.git
 ```
 ※ --recursive オプションでサブモジュールも一緒にクローン
 
