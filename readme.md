@@ -80,10 +80,11 @@ jupyter-lab --no-browser --ip 0.0.0.0 --port 4000
 ```
 指示されたtoken付きのURLをブラウザで起動<br>
 例 )<br>
+```
 http://ce00a76dca26:4000/?token=693784dde4cc376b5a5d1156b2356d3a6258d29cdab93b87
  or http://127.0.0.1:4000/?token=693784dde4cc376b5a5d1156b2356d3a6258d29cdab93b87
+```
 
-<br>
 <br>
 
 ## Juliusについて
