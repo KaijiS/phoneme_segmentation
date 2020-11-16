@@ -36,7 +36,6 @@ def phoneme_segmentation(speech: Speech) -> List[Phoneme]:
     wave_binary: bytes = base64.b64decode(speech.wavedata_base64.encode("UTF-8"))
 
     # 音声ファイルの検証
-    # TODO 検証
     validate_wavefile(wave_binary)
     logging.info(f'Wave File Validation: OK')
 
