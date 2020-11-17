@@ -45,12 +45,12 @@ docker-compose up -d
 
 Swaggerによる表示
 ```
-{ホストIP or ドメイン}:8000/docs
+{ホストIP or ドメイン}:9000/docs
 ```
 
 ReDocによる表示
 ```
-{ホストIP or ドメイン}:8000/redoc
+{ホストIP or ドメイン}:9000/redoc
 ```
 
 <br>
@@ -108,7 +108,7 @@ exit
 
 ### コンテナ内でapp起動
 ```
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn main:app --reload --host 0.0.0.0 --port 9000
 ```
 
 ### ログの場所
